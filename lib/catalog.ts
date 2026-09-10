@@ -6,6 +6,7 @@ export type CatalogProduct = {
   price: number;
   compareAt?: number;
   images: string[];
+  colors?: Array<{ name: string; image: string }>;
   badge?: string;
   sizes: string[];
   initialStock: number;
@@ -15,8 +16,7 @@ export type CatalogProduct = {
 
 export const catalog: CatalogProduct[] = [
   { id:"camiseta-casa-blanca", sku:"CAM-CSB-VER", name:"Camiseta Casa Blanca", category:"Camisetas", price:119.9, images:["/products/camiseta-verde-frente.png","/products/camiseta-verde-costas-branco.png"], badge:"Destaque", sizes:["M","G","GG"], initialStock:14, description:"Modelagem oversized em verde profundo, estampa frontal minimal e arte clássica nas costas." },
-  { id:"moletom-champion-preto", sku:"MOL-CHP-PT", name:"Moletom Champion Preto", category:"Moletons", price:189.9, images:["/products/moletom-preto.png"], badge:"Últimas peças", sizes:["M","G","GG"], initialStock:6, description:"Moletom preto de gola careca, punhos canelados e assinatura na manga." },
-  { id:"moletom-champion-offwhite", sku:"MOL-CHP-OW", name:"Moletom Champion Off-white", category:"Moletons", price:189.9, images:["/products/moletom-offwhite.png"], sizes:["M","G","GG"], initialStock:7, description:"Base off-white com contraste azul e vermelho para um visual limpo e marcante." },
+  { id:"moletom-champion", sku:"MOL-CHP", name:"Moletom Champion", category:"Moletons", price:189.9, images:["/products/moletom-preto.png","/products/moletom-offwhite.png"], colors:[{name:"Preto",image:"/products/moletom-preto.png"},{name:"Off-white",image:"/products/moletom-offwhite.png"}], badge:"2 cores", sizes:["M","G","GG"], initialStock:13, description:"Moletom Champion de gola careca e punhos canelados, disponível nas cores preto e off-white." },
   { id:"bermuda-diesel-bege", sku:"BER-DSL-BG", name:"Bermuda Diesel Bege", category:"Bermudas", price:139.9, images:["/products/bermuda-diesel.png"], sizes:["M","G","GG"], initialStock:10, description:"Tecido leve, cintura elástica e lettering oversized em preto e off-white." },
   { id:"bermuda-jeans-neon", sku:"BER-JNS-NEO", name:"Bermuda Jeans Neon", category:"Bermudas", price:149.9, images:["/products/bermuda-jeans-neon.png"], badge:"Novo", sizes:["38","40","42","44"], initialStock:8, description:"Jeans destroyed escuro com acabamento de barra a fio e cordões neon." },
   { id:"tenis-plataforma-azul", sku:"TEN-PLT-AZ", name:"Tênis Plataforma Azul", category:"Tênis", price:219.9, images:["/products/tenis-azul.png"], badge:"Novo", sizes:["36","37","38","39","40"], initialStock:9, description:"Tênis low azul-claro com plataforma branca e acabamento monocromático." },

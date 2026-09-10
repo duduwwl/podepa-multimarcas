@@ -30,7 +30,8 @@ export async function POST(request: Request) {
       const product = productById.get(String(item.productId ?? ""));
       const quantity = Math.max(1, Math.min(10, Number(item.quantity ?? 1)));
       const size = String(item.size ?? "");
-      if (!product || !product.sizes.includes(size)) throw new Error("Um item ou tamanho da sacola não é válido.");
+      const selectedSize = size.split(" • ")[0];
+      if (!product || !product.sizes.includes(selectedSize)) throw new Error("Um item ou tamanho da sacola não é válido.");
       return { product, quantity, size };
     });
     const subtotal = normalized.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
