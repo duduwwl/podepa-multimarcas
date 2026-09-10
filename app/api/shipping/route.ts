@@ -1,4 +1,5 @@
 import { shippingForState, STORE_ORIGIN } from "../../../lib/shipping";
+import { corsPreflight, jsonWithCors } from "../../../lib/cors";
 
 function stateFromCep(cep:string) {
   const value = Number(cep);
@@ -10,7 +11,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const cep = (url.searchParams.get("cep") ?? "").replace(/\D/g, "");
   const items = Math.max(1, Number(url.searchParams.get("items") ?? 1));
-  if (cep.length !== 8) return Response.json({ error:"Informe um CEP válido com 8 números." }, { status:400 });
+  if (cep.length !== 8) return jsonWithCors(request,{ error:"Informe um CEP válido com 8 números." },{ status:400 });
 
   try {
     let address: { state?: string; city?: string; street?: string; neighborhood?: string } | null = null;
@@ -26,8 +27,12 @@ export async function GET(request: Request) {
     if (!address?.state) address = { state:stateFromCep(cep) ?? undefined };
     if (!address.state) throw new Error("CEP não localizado");
     const quote = shippingForState(address.state, items);
-    return Response.json({ ...quote, origin:STORE_ORIGIN, destination:{ cep, state:address.state, city:address.city ?? "", street:address.street ?? "", neighborhood:address.neighborhood ?? "" } });
+    return jsonWithCors(request,{ ...quote, origin:STORE_ORIGIN, destination:{ cep, state:address.state, city:address.city ?? "", street:address.street ?? "", neighborhood:address.neighborhood ?? "" } });
   } catch {
-    return Response.json({ error:"Não conseguimos calcular agora. Confira o CEP e tente novamente." }, { status:502 });
+    return jsonWithCors(request,{ error:"Não conseguimos calcular agora. Confira o CEP e tente novamente." },{ status:502 });
   }
+}
+
+export function OPTIONS(request:Request) {
+  return corsPreflight(request);
 }
