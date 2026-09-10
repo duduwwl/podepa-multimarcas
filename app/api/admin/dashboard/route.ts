@@ -7,7 +7,7 @@ export async function GET() {
   if (!user) return Response.json({ error:"Faça login para acessar a gerência." }, { status:401 });
   try {
     const [ordersResult, itemsResult, inventoryResult] = await env.DB.batch([
-      env.DB.prepare("SELECT id, customer_name as customerName, email, phone, cep, city, state, delivery_method as deliveryMethod, shipping_fee as shippingFee, total, status, created_at as createdAt FROM orders ORDER BY created_at DESC LIMIT 100"),
+      env.DB.prepare("SELECT id, customer_name as customerName, email, phone, cep, city, state, delivery_method as deliveryMethod, payment_method as paymentMethod, shipping_fee as shippingFee, total, status, created_at as createdAt FROM orders ORDER BY created_at DESC LIMIT 100"),
       env.DB.prepare("SELECT order_id as orderId, name, size, quantity, unit_price as unitPrice FROM order_items ORDER BY id ASC"),
       env.DB.prepare("SELECT sku, stock, updated_at as updatedAt FROM inventory"),
     ]);

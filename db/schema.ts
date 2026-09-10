@@ -12,6 +12,7 @@ export const orders = sqliteTable("orders", {
   city: text("city").notNull(),
   state: text("state").notNull(),
   deliveryMethod: text("delivery_method").notNull(),
+  paymentMethod: text("payment_method").notNull().default("pix"),
   shippingFee: real("shipping_fee").notNull().default(0),
   total: real("total").notNull(),
   status: text("status").notNull().default("novo"),
