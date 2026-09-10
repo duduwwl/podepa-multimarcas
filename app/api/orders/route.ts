@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const paymentMethod = String(data.paymentMethod);
     const required = ["name","email","phone","cpf","deliveryMethod","paymentMethod",...(deliveryMethod === "delivery" ? ["cep","address","city","state"] : [])];
     if (required.some((key) => typeof data[key] !== "string" || !(data[key] as string).trim())) return Response.json({ error:"Preencha todos os dados do checkout." }, { status:400 });
-    if (!["pix","card"].includes(paymentMethod)) return Response.json({ error:"Escolha uma forma de pagamento válida." }, { status:400 });
+    if (!["pix","credit","debit"].includes(paymentMethod)) return Response.json({ error:"Escolha uma forma de pagamento válida." }, { status:400 });
     if (!/^\S+@\S+\.\S+$/.test(String(data.email))) return Response.json({ error:"E-mail inválido." }, { status:400 });
     if (!validCPF(String(data.cpf))) return Response.json({ error:"CPF inválido." }, { status:400 });
     if (!Array.isArray(data.items) || data.items.length === 0) return Response.json({ error:"Sua sacola está vazia." }, { status:400 });
