@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Camera, CheckCircle2, ChevronLeft, ChevronRight, Hash, Heart, MapPin, Menu, MessageCircle, Minus, MoveUpRight, PackageCheck, Plus, Ruler, Search, ShieldCheck, ShoppingBag, Sparkles, Tag, Trash2, Truck, X, ZoomIn } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, ChevronLeft, ChevronRight, Hash, Heart, MapPin, Menu, MessageCircle, Minus, PackageCheck, Plus, Ruler, Search, ShieldCheck, ShoppingBag, Sparkles, Tag, Trash2, Truck, X, ZoomIn } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { catalog, CatalogProduct, productById } from "../lib/catalog";
 
@@ -9,9 +9,11 @@ type ShippingQuote = { fee:number; days:string; destination:{ state:string; city
 
 const money = (value:number) => value.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 const heroProducts = [
-  { name:"Camiseta Casa Blanca", image:"/products/camiseta-verde-frente.png" },
-  { name:"Moletom Champion Preto", image:"/products/moletom-preto.png" },
-  { name:"Moletom Champion Off-white", image:"/products/moletom-offwhite.png" },
+  { name:"Camiseta Casa Blanca", front:"/products/camiseta-verde-frente.png", back:"/products/camiseta-verde-costas-transparent-v2.png" },
+  { name:"Moletom Champion Preto", front:"/products/moletom-preto.png", back:"/products/moletom-preto.png" },
+  { name:"Moletom Champion Off-white", front:"/products/moletom-offwhite.png", back:"/products/moletom-offwhite.png" },
+  { name:"Bermuda Diesel Bege", front:"/products/bermuda-diesel.png", back:"/products/bermuda-diesel.png" },
+  { name:"Bermuda Jeans Neon", front:"/products/bermuda-jeans-neon.png", back:"/products/bermuda-jeans-neon.png" },
 ];
 
 export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog" } = {}) {
@@ -111,7 +113,9 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
   },[cart.length,cartCount]);
 
   useEffect(() => {
-    if (mode === "catalog" && new URLSearchParams(window.location.search).get("categoria") === "Kits") setActive("Kits");
+    if (mode !== "catalog") return;
+    const category = new URLSearchParams(window.location.search).get("categoria");
+    if (["Camisetas","Moletons","Bermudas","Tênis","Kits"].includes(category??"")) setActive(category!);
   },[mode]);
 
   useEffect(() => {
@@ -141,10 +145,18 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
 
     {mode === "home" ? <>
       <section id="inicio" className="hero">
-        <div className="hero-copy"><p className="eyebrow">MODA MASCULINA • LAVRAS, MG</p><h1>Seu estilo<br/><em>fala primeiro.</em></h1><p className="hero-text">Vista sua identidade. Uma seleção de peças marcantes para quem não passa despercebido.</p><a className="primary-cta" href="/produtos">Explorar os produtos <MoveUpRight /></a></div>
-        <div className="hero-visual"><span className="outline-word">PODE PÁ</span><button key={`${heroIndex}-${spinKey}`} className="shirt-spinner" onClick={()=>setSpinKey((current)=>current+1)} aria-label={`Girar ${heroProducts[heroIndex].name} em 360 graus`}><img className="shirt-front" src={heroProducts[heroIndex].image} alt={heroProducts[heroIndex].name}/><img className="shirt-back" src={heroProducts[heroIndex].image} alt=""/></button><div className="hero-carousel-controls"><button onClick={()=>{setHeroIndex((heroIndex-1+heroProducts.length)%heroProducts.length);setSpinKey((current)=>current+1)}} aria-label="Peça anterior"><ChevronLeft/></button><div>{heroProducts.map((product,index)=><button key={product.name} className={heroIndex===index?"active":""} onClick={()=>{setHeroIndex(index);setSpinKey((current)=>current+1)}} aria-label={`Mostrar ${product.name}`}/>)}</div><button onClick={()=>{setHeroIndex((heroIndex+1)%heroProducts.length);setSpinKey((current)=>current+1)}} aria-label="Próxima peça"><ChevronRight/></button></div><span className="spin-hint">Clique para girar</span></div>
+        <div className="hero-copy"><p className="eyebrow">MODA MASCULINA • LAVRAS, MG</p><h1>Seu estilo<br/><em>fala primeiro.</em></h1><p className="hero-text">Vista sua identidade. Uma seleção de peças marcantes para quem não passa despercebido.</p><a className="primary-cta" href="/produtos">Explorar os produtos <span className="cta-arrow"><ArrowRight /></span></a></div>
+        <div className="hero-visual"><span className="outline-word">PODE PÁ</span><button key={`${heroIndex}-${spinKey}`} className="shirt-spinner" onClick={()=>setSpinKey((current)=>current+1)} aria-label={`Girar ${heroProducts[heroIndex].name} em 360 graus`}><img className="shirt-front" src={heroProducts[heroIndex].front} alt={heroProducts[heroIndex].name}/><img className="shirt-back" src={heroProducts[heroIndex].back} alt={`Parte de trás de ${heroProducts[heroIndex].name}`}/></button><div className="hero-carousel-controls"><button onClick={()=>{setHeroIndex((heroIndex-1+heroProducts.length)%heroProducts.length);setSpinKey((current)=>current+1)}} aria-label="Peça anterior"><ChevronLeft/></button><div>{heroProducts.map((product,index)=><button key={product.name} className={heroIndex===index?"active":""} onClick={()=>{setHeroIndex(index);setSpinKey((current)=>current+1)}} aria-label={`Mostrar ${product.name}`}/>)}</div><button onClick={()=>{setHeroIndex((heroIndex+1)%heroProducts.length);setSpinKey((current)=>current+1)}} aria-label="Próxima peça"><ChevronRight/></button></div><span className="spin-hint">Clique para girar</span></div>
       </section>
       <section className="brand-strip"><span>PODE PÁ APRESENTA</span><Sparkles/><span>ESCOLHAS QUE FOGEM DO ÓBVIO</span><Sparkles/><span>DE LAVRAS PARA O SEU ESTILO</span></section>
+      <section className="home-showcase">
+        <div className="home-showcase-heading"><div><p className="eyebrow">ESCOLHA O SEU CORRE</p><h2>Um drop para cada momento.</h2></div><a href="/produtos">Ver catálogo <ArrowRight/></a></div>
+        <div className="home-showcase-grid">
+          <a href="/produtos?categoria=Camisetas"><span>01</span><img src="/products/camiseta-verde-frente.png" alt="Camiseta verde Casa Blanca"/><div><small>Camisetas</small><strong>Presença em cada detalhe</strong><ArrowRight/></div></a>
+          <a href="/produtos?categoria=Moletons"><span>02</span><img src="/products/moletom-preto.png" alt="Moletom Champion preto"/><div><small>Moletons</small><strong>Conforto com assinatura</strong><ArrowRight/></div></a>
+          <a href="/produtos?categoria=Bermudas"><span>03</span><img src="/products/bermuda-jeans-neon.png" alt="Bermuda jeans com cordões neon"/><div><small>Bermudas</small><strong>Do básico ao marcante</strong><ArrowRight/></div></a>
+        </div>
+      </section>
     </> : <section id="loja" className="shop-section catalog-page">
         <div className="section-heading"><div><p className="eyebrow">ESTOQUE SELECIONADO</p><h2>Encontre a peça que combina com você.</h2></div><p>Escolha uma categoria e descubra o que faz sentido para o seu estilo.</p></div>
         <div className="shop-toolbar"><div className="filters" role="group" aria-label="Filtrar produtos">{["Todos","Camisetas","Moletons","Bermudas","Tênis","Kits"].map((category)=><button key={category} className={active===category?"active":""} onClick={()=>setActive(category)}>{category}{category==="Kits"&&<sup>{catalog.filter((product)=>product.category==="Kits").length}</sup>}</button>)}</div><label className="sort-select">Ordenar<select value={sort} onChange={(event)=>setSort(event.target.value)}><option value="destaques">Destaques</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option></select></label></div>
