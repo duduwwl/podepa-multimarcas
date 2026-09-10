@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Camera, CheckCircle2, ChevronLeft, ChevronRight, Heart, MapPin, Menu, MessageCircle, Minus, PackageCheck, Plus, Search, ShieldCheck, ShoppingBag, Sparkles, Trash2, Truck, UserRound, X } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, ChevronLeft, ChevronRight, Heart, MapPin, Menu, MessageCircle, Minus, MoveUpRight, Plus, Search, ShieldCheck, ShoppingBag, Sparkles, Trash2, Truck, UserRound, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { catalog, CatalogProduct, productById } from "../lib/catalog";
 
@@ -9,7 +9,7 @@ type ShippingQuote = { fee:number; days:string; destination:{ state:string; city
 
 const money = (value:number) => value.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 
-export default function Home() {
+export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog" } = {}) {
   const [active,setActive] = useState("Todos");
   const [query,setQuery] = useState("");
   const [sort,setSort] = useState("destaques");
@@ -26,6 +26,7 @@ export default function Home() {
   const [orderLoading,setOrderLoading] = useState(false);
   const [orderError,setOrderError] = useState("");
   const [orderId,setOrderId] = useState("");
+  const [spinKey,setSpinKey] = useState(0);
 
   const visible = useMemo(() => {
     let result = catalog.filter((product) => (active === "Todos" || product.category === active) && (!query || `${product.name} ${product.category} ${product.description}`.toLowerCase().includes(query.toLowerCase())));
@@ -84,40 +85,43 @@ export default function Home() {
     return () => lifecycle.abort();
   },[cart.length,cartCount]);
 
+  useEffect(() => {
+    if (mode === "catalog" && new URLSearchParams(window.location.search).get("categoria") === "Kits") setActive("Kits");
+  },[mode]);
+
   return <main>
-    <div className="topbar">Lavras → Todo o Brasil <span>•</span> Retire grátis na loja</div>
     <header className="nav-shell">
       <button className="icon-button mobile-only" onClick={() => setMobileMenu(true)} aria-label="Abrir menu"><Menu /></button>
-      <a className="brand" href="#inicio" aria-label="Pode Pá Multimarcas, início"><span>Pode Pá</span><small>MULTIMARCAS</small></a>
-      <nav aria-label="Navegação principal"><a href="#novidades">Novidades</a><a href="#loja">Loja</a><a href="#loja" onClick={() => setActive("Kits")}>Kits</a><a href="#rodape">A loja</a></nav>
+      <a className="brand" href="/" aria-label="Pode Pá Multimarcas, início"><span>Pode Pá</span><small>MULTIMARCAS</small></a>
+      <nav aria-label="Navegação principal"><a href="/produtos">Produtos</a><a href="/produtos?categoria=Kits">Kits</a><a href="#rodape">A loja</a></nav>
       <div className="nav-actions">
-        <label className={`nav-search ${query ? "open" : ""}`}><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar no estoque" aria-label="Buscar no estoque" /></label>
+        {mode === "catalog" ? <label className={`nav-search ${query ? "open" : ""}`}><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar no estoque" aria-label="Buscar no estoque" /></label> : <a className="icon-button" href="/produtos" aria-label="Buscar produtos"><Search /></a>}
         <a className="icon-button" href="/gerencia" aria-label="Área da gerência"><UserRound /></a>
         <button className="cart-button" onClick={() => setCartOpen(true)} aria-label={`Sacola com ${cartCount} itens`}><ShoppingBag /><span>{cartCount}</span></button>
       </div>
     </header>
-    {mobileMenu && <div className="mobile-menu"><button onClick={() => setMobileMenu(false)} aria-label="Fechar menu"><X /></button><a href="#novidades" onClick={() => setMobileMenu(false)}>Novidades</a><a href="#loja" onClick={() => setMobileMenu(false)}>Loja</a><a href="#loja" onClick={() => {setActive("Kits");setMobileMenu(false)}}>Kits</a><a href="/gerencia">Gerência</a></div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={() => setMobileMenu(false)} aria-label="Fechar menu"><X /></button><a href="/">Início</a><a href="/produtos">Produtos</a><a href="/produtos?categoria=Kits">Kits</a><a href="/gerencia">Gerência</a></div>}
 
-    <section id="inicio" className="hero">
-      <div className="hero-copy"><p className="eyebrow">CURADORIA MASCULINA • DROP 09</p><h1>Seu estilo<br/><em>fala primeiro.</em></h1><p className="hero-text">Peças que chegam com presença — do street ao essencial, escolhidas em Lavras para vestir o Brasil.</p><a className="primary-cta" href="#loja">Explorar o drop <ArrowRight /></a><div className="hero-proof"><strong>+1,9 mil</strong><span>seguem nosso estilo<br/>no Instagram</span></div></div>
-      <div className="hero-visual"><span className="outline-word">DROP</span><img src="/products/bermuda-jeans-neon.png" alt="Bermuda jeans escura com cordões neon"/><div className="hero-tag"><span>01</span><p>Jeans com atitude<br/><strong>acabou de chegar</strong></p></div></div>
-    </section>
-
-    <section id="novidades" className="brand-strip"><span>PEÇAS QUE CHEGAM COM PRESENÇA</span><Sparkles/><span>ESTOQUE REAL • CURADORIA LOCAL</span><Sparkles/><span>LAVRAS / MG</span></section>
-    <section id="loja" className="shop-section">
-      <div className="section-heading"><div><p className="eyebrow">ESTOQUE SELECIONADO</p><h2>Escolha o seu corre.</h2></div><p>Filtre por categoria e encontre a peça certa sem perder tempo.</p></div>
-      <div className="shop-toolbar"><div className="filters" role="group" aria-label="Filtrar produtos">{["Todos","Camisetas","Moletons","Bermudas","Tênis","Kits"].map((category)=><button key={category} className={active===category?"active":""} onClick={()=>setActive(category)}>{category}{category==="Kits"&&<sup>4</sup>}</button>)}</div><label className="sort-select">Ordenar<select value={sort} onChange={(event)=>setSort(event.target.value)}><option value="destaques">Destaques</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option></select></label></div>
-      <div className="result-count">{visible.length} {visible.length===1?"produto":"produtos"}</div>
-      <div className="product-grid">{visible.map((product)=>{
-        const imageIndex=imageIndexes[product.id]??0; const kit=product.category==="Kits";
-        return <article className={`product-card ${kit?"kit-card":""}`} key={product.id}>
-          <div className={`product-image ${kit?"multi-image":""}`}>{product.badge&&<span>{product.badge}</span>}<button className="wish-button" aria-label={`Favoritar ${product.name}`}><Heart/></button>{kit?product.images.map((image,index)=><img key={image} src={image} alt="" style={{zIndex:index+1}}/>):<img src={product.images[imageIndex]} alt={product.name}/>} {product.images.length>1&&!kit&&<div className="image-controls"><button onClick={()=>nextImage(product,-1)} aria-label="Imagem anterior"><ChevronLeft/></button><button onClick={()=>nextImage(product,1)} aria-label="Próxima imagem"><ChevronRight/></button></div>}</div>
-          <div className="product-info"><div><p>{product.category}</p><h3>{product.name}</h3><span className="product-description">{product.description}</span><div className="price-line"><strong>{money(product.price)}</strong>{product.compareAt&&<del>{money(product.compareAt)}</del>}</div><select className="size-select" value={selectedSizes[product.id]||product.sizes[0]} onChange={(event)=>setSelectedSizes((current)=>({...current,[product.id]:event.target.value}))} aria-label={`Tamanho de ${product.name}`}>{product.sizes.map((size)=><option key={size}>{size}</option>)}</select></div><button onClick={()=>addToCart(product)} aria-label={`Adicionar ${product.name} à sacola`}><ShoppingBag/></button></div>
-        </article>})}{visible.length===0&&<div className="empty-state"><Search/><strong>Nenhuma peça encontrada.</strong><button onClick={()=>{setQuery("");setActive("Todos")}}>Limpar busca</button></div>}</div>
-    </section>
+    {mode === "home" ? <>
+      <section id="inicio" className="hero">
+        <div className="hero-copy"><p className="eyebrow">MODA MASCULINA • LAVRAS, MG</p><h1>Seu estilo<br/><em>fala primeiro.</em></h1><p className="hero-text">Vista sua identidade. Uma seleção de peças marcantes para quem não passa despercebido.</p><a className="primary-cta" href="/produtos">Explorar os produtos <MoveUpRight /></a></div>
+        <div className="hero-visual"><span className="outline-word">PODE PÁ</span><button key={spinKey} className="shirt-spinner" onClick={()=>setSpinKey((current)=>current+1)} aria-label="Girar camiseta em 360 graus"><img className="shirt-front" src="/products/camiseta-verde-frente.png" alt="Camiseta Casa Blanca verde, vista frontal"/><img className="shirt-back" src="/products/camiseta-verde-costas.png" alt="Camiseta Casa Blanca verde, vista traseira"/></button><span className="spin-hint">360° • clique para girar</span></div>
+      </section>
+      <section className="brand-strip"><span>PODE PÁ APRESENTA</span><Sparkles/><span>ESCOLHAS QUE FOGEM DO ÓBVIO</span><Sparkles/><span>DE LAVRAS PARA O SEU ESTILO</span></section>
+    </> : <section id="loja" className="shop-section catalog-page">
+        <div className="section-heading"><div><p className="eyebrow">ESTOQUE SELECIONADO</p><h2>Encontre a peça que combina com você.</h2></div><p>Escolha uma categoria e descubra o que faz sentido para o seu estilo.</p></div>
+        <div className="shop-toolbar"><div className="filters" role="group" aria-label="Filtrar produtos">{["Todos","Camisetas","Moletons","Bermudas","Tênis","Kits"].map((category)=><button key={category} className={active===category?"active":""} onClick={()=>setActive(category)}>{category}{category==="Kits"&&<sup>{catalog.filter((product)=>product.category==="Kits").length}</sup>}</button>)}</div><label className="sort-select">Ordenar<select value={sort} onChange={(event)=>setSort(event.target.value)}><option value="destaques">Destaques</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option></select></label></div>
+        <div className="result-count">{visible.length} {visible.length===1?"produto":"produtos"}</div>
+        <div className="product-grid">{visible.map((product)=>{
+          const imageIndex=imageIndexes[product.id]??0; const kit=product.category==="Kits";
+          return <article className={`product-card ${kit?"kit-card":""}`} key={product.id}>
+            <div className={`product-image ${kit?"multi-image":""}`}>{product.badge&&<span>{product.badge}</span>}<button className="wish-button" aria-label={`Favoritar ${product.name}`}><Heart/></button>{kit?product.images.map((image,index)=><img key={image} src={image} alt="" style={{zIndex:index+1}}/>):<img src={product.images[imageIndex]} alt={product.name}/>} {product.images.length>1&&!kit&&<div className="image-controls"><button onClick={()=>nextImage(product,-1)} aria-label="Imagem anterior"><ChevronLeft/></button><button onClick={()=>nextImage(product,1)} aria-label="Próxima imagem"><ChevronRight/></button></div>}</div>
+            <div className="product-info"><div><p>{product.category}</p><h3>{product.name}</h3><span className="product-description">{product.description}</span><div className="price-line"><strong>{money(product.price)}</strong>{product.compareAt&&<del>{money(product.compareAt)}</del>}</div><select className="size-select" value={selectedSizes[product.id]||product.sizes[0]} onChange={(event)=>setSelectedSizes((current)=>({...current,[product.id]:event.target.value}))} aria-label={`Tamanho de ${product.name}`}>{product.sizes.map((size)=><option key={size}>{size}</option>)}</select></div><button onClick={()=>addToCart(product)} aria-label={`Adicionar ${product.name} à sacola`}><ShoppingBag/></button></div>
+          </article>})}{visible.length===0&&<div className="empty-state"><Search/><strong>Nenhuma peça encontrada.</strong><button onClick={()=>{setQuery("");setActive("Todos")}}>Limpar busca</button></div>}</div>
+      </section>}
 
     <section className="service-grid"><article><Truck/><div><strong>Entrega nacional</strong><span>Frete calculado desde Lavras, MG</span></div></article><article><MapPin/><div><strong>Retirada grátis</strong><span>Reserve e busque na loja</span></div></article><article><ShieldCheck/><div><strong>Pedido protegido</strong><span>Dados validados no checkout</span></div></article></section>
-    <footer id="rodape"><div><a className="brand footer-brand" href="#inicio"><span>Pode Pá</span><small>MULTIMARCAS</small></a><p>Sua mais nova opção em moda masculina.<br/>Lavras, Minas Gerais.</p></div><div><strong>Atendimento</strong><a href="https://wa.me/5535984649336" target="_blank" rel="noreferrer">WhatsApp</a><a href="https://www.instagram.com/loja_podepa/" target="_blank" rel="noreferrer">Instagram @loja_podepa</a></div><div><strong>Loja</strong><a href="#loja">Catálogo</a><a href="#loja" onClick={()=>setActive("Kits")}>Kits</a><a href="/gerencia">Área da gerência</a></div></footer>
+    <footer id="rodape"><div><a className="brand footer-brand" href="/"><span>Pode Pá</span><small>MULTIMARCAS</small></a><p>Curadoria masculina sem cópia: peças escolhidas para quem veste atitude todos os dias.<br/>De Lavras para o Brasil.</p></div><div><strong>Atendimento</strong><a href="https://wa.me/5535984649336" target="_blank" rel="noreferrer">WhatsApp</a><a href="https://www.instagram.com/loja_podepa/" target="_blank" rel="noreferrer">Instagram @loja_podepa</a></div><div><strong>Loja</strong><a href="/produtos">Produtos</a><a href="/produtos?categoria=Kits">Kits</a><a href="/gerencia">Área da gerência</a></div></footer>
     <div className="floating-social"><a href="https://wa.me/5535984649336" target="_blank" rel="noreferrer" aria-label="Falar no WhatsApp"><MessageCircle/><span>WhatsApp</span></a><a href="https://www.instagram.com/loja_podepa/" target="_blank" rel="noreferrer" aria-label="Abrir Instagram"><Camera/></a></div>
 
     {cartOpen&&<><button className="drawer-backdrop" onClick={()=>setCartOpen(false)} aria-label="Fechar sacola"/><aside className="cart-drawer" aria-label="Sacola de compras"><header><div><p>{checkout?"CHECKOUT":"SUA SELEÇÃO"}</p><h2>{checkout?"Finalizar pedido":"Sacola"}</h2></div><button onClick={()=>setCartOpen(false)} aria-label="Fechar"><X/></button></header>
