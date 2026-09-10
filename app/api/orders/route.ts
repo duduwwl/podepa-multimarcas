@@ -19,7 +19,8 @@ function validCPF(value: string) {
 export async function POST(request: Request) {
   try {
     const data = await request.json() as Record<string, unknown> & { items?: OrderItemInput[] };
-    const required = ["name","email","phone","cpf","cep","address","city","state","deliveryMethod"];
+    const deliveryMethod = String(data.deliveryMethod) === "pickup" ? "pickup" : "delivery";
+    const required = ["name","email","phone","cpf","deliveryMethod",...(deliveryMethod === "delivery" ? ["cep","address","city","state"] : [])];
     if (required.some((key) => typeof data[key] !== "string" || !(data[key] as string).trim())) return Response.json({ error:"Preencha todos os dados do checkout." }, { status:400 });
     if (!/^\S+@\S+\.\S+$/.test(String(data.email))) return Response.json({ error:"E-mail inválido." }, { status:400 });
     if (!validCPF(String(data.cpf))) return Response.json({ error:"CPF inválido." }, { status:400 });
@@ -34,13 +35,12 @@ export async function POST(request: Request) {
     });
     const subtotal = normalized.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
     const quantity = normalized.reduce((sum, item) => sum + item.quantity, 0);
-    const deliveryMethod = String(data.deliveryMethod) === "pickup" ? "pickup" : "delivery";
     const shippingFee = deliveryMethod === "pickup" ? 0 : shippingForState(String(data.state), quantity).fee;
     const total = Number((subtotal + shippingFee).toFixed(2));
     const orderId = `PP-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0,4).toUpperCase()}`;
 
     const statements = [
-      env.DB.prepare("INSERT INTO orders (id, customer_name, email, phone, cpf, cep, address, city, state, delivery_method, shipping_fee, total, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'novo')").bind(orderId, String(data.name).trim(), String(data.email).trim(), String(data.phone).trim(), String(data.cpf).replace(/\D/g,""), String(data.cep).replace(/\D/g,""), String(data.address).trim(), String(data.city).trim(), String(data.state).trim().toUpperCase(), deliveryMethod, shippingFee, total),
+      env.DB.prepare("INSERT INTO orders (id, customer_name, email, phone, cpf, cep, address, city, state, delivery_method, shipping_fee, total, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'novo')").bind(orderId, String(data.name).trim(), String(data.email).trim(), String(data.phone).trim(), String(data.cpf).replace(/\D/g,""), deliveryMethod === "pickup" ? "" : String(data.cep).replace(/\D/g,""), deliveryMethod === "pickup" ? "Retirada na loja" : String(data.address).trim(), deliveryMethod === "pickup" ? "Lavras" : String(data.city).trim(), deliveryMethod === "pickup" ? "MG" : String(data.state).trim().toUpperCase(), deliveryMethod, shippingFee, total),
       ...normalized.flatMap(({ product, quantity, size }) => [
         env.DB.prepare("INSERT INTO order_items (order_id, product_id, sku, name, size, quantity, unit_price) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(orderId, product.id, product.sku, product.name, size, quantity, product.price),
         env.DB.prepare("INSERT INTO inventory (sku, stock, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(sku) DO UPDATE SET stock = MAX(0, inventory.stock - ?), updated_at = CURRENT_TIMESTAMP").bind(product.sku, Math.max(0, product.initialStock - quantity), quantity),
