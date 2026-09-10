@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Camera, CheckCircle2, ChevronLeft, ChevronRight, Hash, Heart, MapPin, Menu, MessageCircle, Minus, MoveUpRight, PackageCheck, Plus, Ruler, Search, ShieldCheck, ShoppingBag, Sparkles, Tag, Trash2, Truck, UserRound, X, ZoomIn } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, ChevronLeft, ChevronRight, Hash, Heart, MapPin, Menu, MessageCircle, Minus, MoveUpRight, PackageCheck, Plus, Ruler, Search, ShieldCheck, ShoppingBag, Sparkles, Tag, Trash2, Truck, X, ZoomIn } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { catalog, CatalogProduct, productById } from "../lib/catalog";
 
@@ -8,6 +8,11 @@ type CartItem = { productId:string; size:string; quantity:number };
 type ShippingQuote = { fee:number; days:string; destination:{ state:string; city:string; street:string; neighborhood:string } };
 
 const money = (value:number) => value.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const heroProducts = [
+  { name:"Camiseta Casa Blanca", image:"/products/camiseta-verde-frente.png" },
+  { name:"Moletom Champion Preto", image:"/products/moletom-preto.png" },
+  { name:"Moletom Champion Off-white", image:"/products/moletom-offwhite.png" },
+];
 
 export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog" } = {}) {
   const [active,setActive] = useState("Todos");
@@ -27,6 +32,7 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
   const [orderError,setOrderError] = useState("");
   const [orderId,setOrderId] = useState("");
   const [spinKey,setSpinKey] = useState(0);
+  const [heroIndex,setHeroIndex] = useState(0);
   const [detailProduct,setDetailProduct] = useState<CatalogProduct|null>(null);
   const [detailImage,setDetailImage] = useState(0);
 
@@ -94,6 +100,12 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
   },[mode]);
 
   useEffect(() => {
+    if (mode !== "home") return;
+    const timer = window.setInterval(() => { setHeroIndex((current)=>(current+1)%heroProducts.length); setSpinKey((current)=>current+1); },4800);
+    return () => window.clearInterval(timer);
+  },[mode]);
+
+  useEffect(() => {
     if (!detailProduct) return;
     const close = (event:KeyboardEvent) => { if (event.key === "Escape") setDetailProduct(null); };
     window.addEventListener("keydown",close);
@@ -103,20 +115,19 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
   return <main>
     <header className="nav-shell">
       <button className="icon-button mobile-only" onClick={() => setMobileMenu(true)} aria-label="Abrir menu"><Menu /></button>
-      <a className="brand" href="/" aria-label="Pode Pá Multimarcas, início"><span>Pode Pá</span><small>MULTIMARCAS</small></a>
-      <nav aria-label="Navegação principal"><a href="/produtos">Produtos</a><a href="/produtos?categoria=Kits">Kits</a></nav>
+      <a className="brand" href="/" aria-label="Pode Pá Multimarcas, início"><span>Pode Pá</span><small>MULTIMARCAS</small><img className="brand-mark" src="/podepa-peace-mark.png" alt=""/></a>
+      <nav aria-label="Navegação principal"><a href="/produtos">Produtos</a><a href="#rodape">Sobre nós</a></nav>
       <div className="nav-actions">
         {mode === "catalog" ? <label className={`nav-search ${query ? "open" : ""}`}><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar no estoque" aria-label="Buscar no estoque" /></label> : <a className="icon-button" href="/produtos" aria-label="Buscar produtos"><Search /></a>}
-        <a className="icon-button" href="/gerencia" aria-label="Área da gerência"><UserRound /></a>
         <button className="cart-button" onClick={() => setCartOpen(true)} aria-label={`Sacola com ${cartCount} itens`}><ShoppingBag /><span>{cartCount}</span></button>
       </div>
     </header>
-    {mobileMenu && <div className="mobile-menu"><button onClick={() => setMobileMenu(false)} aria-label="Fechar menu"><X /></button><a href="/">Início</a><a href="/produtos">Produtos</a><a href="/produtos?categoria=Kits">Kits</a><a href="/gerencia">Gerência</a></div>}
+    {mobileMenu && <div className="mobile-menu"><button onClick={() => setMobileMenu(false)} aria-label="Fechar menu"><X /></button><a href="/">Início</a><a href="/produtos">Produtos</a><a href="#rodape" onClick={()=>setMobileMenu(false)}>Sobre nós</a></div>}
 
     {mode === "home" ? <>
       <section id="inicio" className="hero">
         <div className="hero-copy"><p className="eyebrow">MODA MASCULINA • LAVRAS, MG</p><h1>Seu estilo<br/><em>fala primeiro.</em></h1><p className="hero-text">Vista sua identidade. Uma seleção de peças marcantes para quem não passa despercebido.</p><a className="primary-cta" href="/produtos">Explorar os produtos <MoveUpRight /></a></div>
-        <div className="hero-visual"><span className="outline-word">PODE PÁ</span><button key={spinKey} className="shirt-spinner" onClick={()=>setSpinKey((current)=>current+1)} aria-label="Girar camiseta em 360 graus"><img className="shirt-front" src="/products/camiseta-verde-frente.png" alt="Camiseta Casa Blanca verde, vista frontal"/><img className="shirt-back" src="/products/camiseta-verde-costas.png" alt="Camiseta Casa Blanca verde, vista traseira"/></button><span className="spin-hint">360° • clique para girar</span></div>
+        <div className="hero-visual"><span className="outline-word">PODE PÁ</span><button key={`${heroIndex}-${spinKey}`} className="shirt-spinner" onClick={()=>setSpinKey((current)=>current+1)} aria-label={`Girar ${heroProducts[heroIndex].name} em 360 graus`}><img className="shirt-front" src={heroProducts[heroIndex].image} alt={heroProducts[heroIndex].name}/><img className="shirt-back" src={heroProducts[heroIndex].image} alt=""/></button><div className="hero-carousel-controls"><button onClick={()=>{setHeroIndex((heroIndex-1+heroProducts.length)%heroProducts.length);setSpinKey((current)=>current+1)}} aria-label="Peça anterior"><ChevronLeft/></button><div>{heroProducts.map((product,index)=><button key={product.name} className={heroIndex===index?"active":""} onClick={()=>{setHeroIndex(index);setSpinKey((current)=>current+1)}} aria-label={`Mostrar ${product.name}`}/>)}</div><button onClick={()=>{setHeroIndex((heroIndex+1)%heroProducts.length);setSpinKey((current)=>current+1)}} aria-label="Próxima peça"><ChevronRight/></button></div><span className="spin-hint">Clique para girar</span></div>
       </section>
       <section className="brand-strip"><span>PODE PÁ APRESENTA</span><Sparkles/><span>ESCOLHAS QUE FOGEM DO ÓBVIO</span><Sparkles/><span>DE LAVRAS PARA O SEU ESTILO</span></section>
     </> : <section id="loja" className="shop-section catalog-page">
