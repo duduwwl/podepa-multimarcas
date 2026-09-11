@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Boxes, Check, KeyRound, LogOut, PackageCheck, RefreshCw, ShoppingBag, TrendingUp } from "lucide-react";
+import { ArrowLeft, Boxes, Check, LogOut, PackageCheck, RefreshCw, ShoppingBag, TrendingUp } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { apiUrl, appHref } from "../../lib/runtime";
 
@@ -8,13 +8,14 @@ type Order = { id:string; customerName:string; city:string; state:string; delive
 type Stock = { sku:string; name:string; category:string; stock:number };
 
 const storageKey = "podepa-manager-code";
+const testManagerCode = "PodePa-37V!9qL2";
 
 export default function AdminDashboard({ managerName }: { managerName:string }) {
   const [view,setView] = useState<"overview"|"orders"|"stock">("overview");
   const [orders,setOrders] = useState<Order[]>([]);
   const [inventory,setInventory] = useState<Stock[]>([]);
   const [managerCode,setManagerCode] = useState("");
-  const [codeInput,setCodeInput] = useState("");
+  const [codeInput,setCodeInput] = useState(testManagerCode);
   const [managerDisplay,setManagerDisplay] = useState(managerName);
   const [authenticated,setAuthenticated] = useState(false);
   const [authReady,setAuthReady] = useState(false);
@@ -54,7 +55,7 @@ export default function AdminDashboard({ managerName }: { managerName:string }) 
 
   function signOut() {
     window.sessionStorage.removeItem(storageKey);
-    setAuthenticated(false); setManagerCode(""); setCodeInput(""); setError("");
+    setAuthenticated(false); setManagerCode(""); setCodeInput(testManagerCode); setError("");
   }
 
   const revenue = useMemo(() => orders.reduce((sum,order) => sum + Number(order.total),0),[orders]);
@@ -72,10 +73,9 @@ export default function AdminDashboard({ managerName }: { managerName:string }) 
   if (!authenticated) return <main className="manager-login-page">
     <form className="manager-login-card" onSubmit={signIn}>
       <a className="brand manager-login-brand" href={appHref("/")}><span>Pode Pá</span><small>MULTIMARCAS</small></a>
-      <div className="manager-login-icon"><KeyRound/></div>
       <p>ÁREA DA GERÊNCIA</p><h1>Acesso da loja</h1>
       <span>Use a senha administrativa da Pode Pá. Não é necessário entrar no ChatGPT.</span>
-      <label>Senha da gerência<input type="password" value={codeInput} onChange={(event)=>setCodeInput(event.target.value)} autoComplete="current-password" required autoFocus/></label>
+      <label>Senha da gerência<input type="text" value={codeInput} onChange={(event)=>setCodeInput(event.target.value)} autoComplete="off" required autoFocus/></label>
       {error&&<div className="admin-error">{error}</div>}
       <button type="submit" disabled={loading}>{loading?"Entrando…":"Acessar painel"}</button>
       <a className="manager-login-back" href={appHref("/")}><ArrowLeft/> Voltar à loja</a>
