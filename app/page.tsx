@@ -24,7 +24,6 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
   const [cart,setCart] = useState<CartItem[]>([]);
   const [selectedSizes,setSelectedSizes] = useState<Record<string,string>>({});
   const [selectedColors,setSelectedColors] = useState<Record<string,string>>({});
-  const [imageIndexes,setImageIndexes] = useState<Record<string,number>>({});
   const [cartOpen,setCartOpen] = useState(false);
   const [checkout,setCheckout] = useState(false);
   const [mobileMenu,setMobileMenu] = useState(false);
@@ -63,11 +62,6 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
     setCartOpen(true); setCheckout(false); setOrderId("");
   }
   function updateQuantity(index:number,delta:number) { setCart((current) => current.flatMap((item,i) => i !== index ? [item] : item.quantity+delta <= 0 ? [] : [{...item,quantity:Math.min(10,item.quantity+delta)}])); setShipping(null); }
-  function nextImage(product:CatalogProduct,direction:number) {
-    const next = ((imageIndexes[product.id]??0)+direction+product.images.length)%product.images.length;
-    setImageIndexes((current) => ({...current,[product.id]:next}));
-    if (product.colors?.[next]) setSelectedColors((current)=>({...current,[product.id]:product.colors![next].name}));
-  }
   function openProduct(product:CatalogProduct) {
     const color = selectedColors[product.id] || product.colors?.[0]?.name;
     setDetailProduct(product);
@@ -166,9 +160,9 @@ export default function Storefront({ mode = "home" }: { mode?: "home" | "catalog
         <div className="shop-toolbar"><div className="filters" role="group" aria-label="Filtrar produtos">{["Todos","Camisetas","Moletons","Bermudas","Tênis","Kits"].map((category)=><button key={category} className={active===category?"active":""} onClick={()=>setActive(category)}>{category}{category==="Kits"&&<sup>{catalog.filter((product)=>product.category==="Kits").length}</sup>}</button>)}</div><label className="sort-select">Ordenar<select value={sort} onChange={(event)=>setSort(event.target.value)}><option value="destaques">Destaques</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option></select></label></div>
         <div className="result-count">{visible.length} {visible.length===1?"produto":"produtos"}</div>
         <div className="product-grid">{visible.map((product)=>{
-          const imageIndex=imageIndexes[product.id]??0; const kit=product.category==="Kits"; const collage=kit&&product.images.length>1;
+          const kit=product.category==="Kits"; const collage=kit&&product.images.length>1;
           return <article className={`product-card ${kit?"kit-card":""}`} key={product.id}>
-            <div className={`product-image ${collage?"multi-image":""} ${product.id==="camiseta-casa-blanca"||kit?"white-backdrop":""}`} role="button" tabIndex={0} onClick={()=>openProduct(product)} onKeyDown={(event)=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openProduct(product)}}} aria-label={`Ver detalhes de ${product.name}`}>{product.badge&&<span>{product.badge}</span>}<button className="wish-button" onClick={(event)=>event.stopPropagation()} aria-label={`Favoritar ${product.name}`}><Heart/></button>{collage?product.images.map((image,index)=><img key={image} src={assetUrl(image)} alt="" style={{zIndex:index+1}}/>):<img src={assetUrl(product.images[imageIndex])} alt={product.name}/>} {product.images.length>1&&!kit&&<div className="image-controls"><button onClick={(event)=>{event.stopPropagation();nextImage(product,-1)}} aria-label="Imagem anterior"><ChevronLeft/></button><button onClick={(event)=>{event.stopPropagation();nextImage(product,1)}} aria-label="Próxima imagem"><ChevronRight/></button></div>}<div className="view-product"><ZoomIn/> Ver detalhes</div></div>
+            <div className={`product-image ${collage?"multi-image":""} ${product.id==="camiseta-casa-blanca"||kit?"white-backdrop":""}`} role="button" tabIndex={0} onClick={()=>openProduct(product)} onKeyDown={(event)=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();openProduct(product)}}} aria-label={`Ver detalhes de ${product.name}`}>{product.badge&&<span>{product.badge}</span>}<button className="wish-button" onClick={(event)=>event.stopPropagation()} aria-label={`Favoritar ${product.name}`}><Heart/></button>{collage?product.images.map((image,index)=><img key={image} src={assetUrl(image)} alt="" style={{zIndex:index+1}}/>):<img src={assetUrl(product.images[0])} alt={product.name}/>}<div className="view-product"><ZoomIn/> Ver detalhes</div></div>
             <div className="product-info"><div><p>{product.category}</p><h3><button className="product-title-button" onClick={()=>openProduct(product)}>{product.name}</button></h3><span className="product-description">{product.description}</span><div className="price-line"><strong>{money(product.price)}</strong>{product.compareAt&&<del>{money(product.compareAt)}</del>}</div></div><button onClick={()=>openProduct(product)} aria-label={`Escolher tamanho e cor de ${product.name}`}><ShoppingBag/></button></div>
           </article>})}{visible.length===0&&<div className="empty-state"><Search/><strong>Nenhuma peça encontrada.</strong><button onClick={()=>{setQuery("");setActive("Todos")}}>Limpar busca</button></div>}</div>
       </section>}
